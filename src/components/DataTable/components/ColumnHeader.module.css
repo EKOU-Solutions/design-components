@@ -1,0 +1,96 @@
+.th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--table-header-bg);
+  color: var(--table-header-color);
+  font-family: var(--table-font-family);
+  font-size: var(--table-font-size);
+  font-weight: 500;
+  height: var(--table-header-height);
+  border: 1px solid var(--table-border);
+  padding: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--table-cell-padding);
+  gap: 4px;
+  height: 100%;
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.chevronButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--table-border);
+  background: var(--table-header-bg);
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0;
+  color: var(--table-header-color);
+}
+
+.chevronButton:hover {
+  background: #e0e0e0;
+}
+
+.chevronButton:focus-visible {
+  outline: 2px solid #0077cc;
+  outline-offset: 1px;
+}
+
+.dropdownWrapper {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  min-width: 160px;
+  background: var(--column-dropdown-bg);
+  box-shadow: var(--column-dropdown-shadow);
+  border: 1px solid var(--table-border);
+  border-radius: 3px;
+  padding: 4px 0;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  font-family: var(--table-font-family);
+  font-size: var(--table-font-size);
+  color: var(--table-header-color);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dropdownItem:hover {
+  background: var(--table-row-hover-bg);
+}
+
+.dropdownItem:focus-visible {
+  outline: 2px solid #0077cc;
+  outline-offset: -2px;
+}

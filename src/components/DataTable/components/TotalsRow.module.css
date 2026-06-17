@@ -1,0 +1,27 @@
+.row {
+  background: var(--table-totals-bg);
+}
+
+.cell {
+  font-family: var(--table-font-family);
+  font-size: var(--table-font-size);
+  font-weight: 700;
+  color: var(--table-header-color);
+  padding: var(--table-cell-padding);
+  border: 1px solid var(--table-border);
+  background: var(--table-totals-bg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+  height: 28px;
+  vertical-align: middle;
+}
+
+.cell[data-align="right"] {
+  text-align: right;
+}
+
+.cell[data-align="center"] {
+  text-align: center;
+}

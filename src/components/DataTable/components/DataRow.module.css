@@ -1,0 +1,8 @@
+.row:hover .cell {
+  background: var(--table-row-hover-bg);
+}
+
+/* Selected cell overrides hover */
+.row:hover .cell[data-selected="true"] {
+  background: var(--table-selected-bg);
+}

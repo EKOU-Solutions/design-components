@@ -1,0 +1,37 @@
+.cell {
+  font-family: var(--table-font-family);
+  font-size: var(--table-font-size);
+  color: var(--table-header-color);
+  padding: var(--table-cell-padding);
+  border: 1px solid var(--table-border);
+  background: var(--table-bg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0; /* forces text-overflow to work in table cells */
+  position: relative;
+  height: 28px;
+  vertical-align: middle;
+}
+
+.cell[data-align="right"] {
+  text-align: right;
+}
+
+.cell[data-align="center"] {
+  text-align: center;
+}
+
+.cell[data-selected="true"] {
+  background: var(--table-selected-bg);
+}
+
+.selectedIndicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  background: var(--table-selected-indicator);
+  pointer-events: none;
+}

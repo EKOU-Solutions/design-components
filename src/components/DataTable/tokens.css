@@ -1,0 +1,19 @@
+:root {
+  --table-bg: #ffffff;
+  --table-border: #d0d0d0;
+  --table-header-bg: #f0f0f0;
+  --table-header-color: #333333;
+  --table-row-hover-bg: #f9f9f9;
+  --table-selected-bg: #fffacd;
+  --table-selected-indicator: #4a90d9;
+  --table-totals-bg: #f0f0f0;
+  --table-font-family: system-ui, sans-serif;
+  --table-font-size: 13px;
+  --table-cell-padding: 4px 8px;
+  --table-header-height: 32px;
+  --table-toolbar-bg: #e8e8e8;
+  --table-toolbar-height: 36px;
+  --table-max-height: 400px;
+  --column-dropdown-bg: #ffffff;
+  --column-dropdown-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

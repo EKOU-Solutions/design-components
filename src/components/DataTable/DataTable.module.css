@@ -1,0 +1,52 @@
+@import "./tokens.css";
+
+.root {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--table-font-family);
+  font-size: var(--table-font-size);
+  width: 100%;
+}
+
+.rootFill {
+  height: 100%;
+  min-height: 0;
+}
+
+.scrollWrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: var(--table-max-height);
+  border: 1px solid var(--table-border);
+  border-bottom: none;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.scrollWrapperFill {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.table {
+  border-collapse: collapse;
+  min-width: max-content;
+  width: 100%;
+  background: var(--table-bg);
+  table-layout: fixed;
+}
+
+.totalsWrapper {
+  border: 1px solid var(--table-border);
+  border-top: none;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.totalsTable {
+  border-collapse: collapse;
+  min-width: max-content;
+  width: 100%;
+  table-layout: fixed;
+}

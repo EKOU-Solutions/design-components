@@ -1,0 +1,65 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--table-toolbar-height);
+  background: var(--table-toolbar-bg);
+  padding: 0 8px;
+  border: 1px solid var(--table-border);
+  border-bottom: none;
+  font-family: var(--table-font-family);
+  font-size: var(--table-font-size);
+  flex-shrink: 0;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--table-border);
+  margin: 0 4px;
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 3px;
+  color: #0077cc;
+  font-size: 15px;
+  padding: 0;
+  line-height: 1;
+}
+
+.iconButton:hover {
+  background: rgba(0, 119, 204, 0.1);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid #0077cc;
+  outline-offset: 1px;
+}
+
+.pageIndicator {
+  font-size: var(--table-font-size);
+  color: var(--table-header-color);
+  padding: 0 4px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.arrowGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.arrowGroup .iconButton {
+  width: 20px;
+  height: 13px;
+  font-size: 10px;
+}
