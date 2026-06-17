@@ -667,4 +667,76 @@ describe("DataTable", () => {
     expect(trs[0]).toHaveAttribute("data-disabled", "true");
     expect(trs[1]).not.toHaveAttribute("data-disabled", "true");
   });
+
+  // 35. Select: Escape cancels without calling onCellChange
+  it("select Escape cancels without calling onCellChange", async () => {
+    const onCellChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataTable columns={selectCols} rows={selectRows} onCellChange={onCellChange} />
+    );
+
+    const table = screen.getByRole("grid");
+    await user.click(table);
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(onCellChange).not.toHaveBeenCalled();
+  });
+
+  // 36. Totals: comma-formatted numbers are parsed correctly
+  it("strips commas from number values when computing totals", () => {
+    const colsWithTotals: ColumnDef[] = [
+      { key: "amount", label: "Amount", width: 100, type: "number", showTotal: true },
+    ];
+    const rowsWithCommas: RowData[] = [
+      { id: "r1", amount: "1,234.50" },
+      { id: "r2", amount: "2,000.00" },
+    ];
+    render(<DataTable columns={colsWithTotals} rows={rowsWithCommas} />);
+    expect(screen.getByText("3234.50")).toBeInTheDocument();
+  });
+
+  // 37. Tab at last data column clamps — does not wrap to next row
+  it("Tab at last data column stays on last column", async () => {
+    const onCellChange = vi.fn();
+    const user = userEvent.setup();
+    render(<DataTable columns={cols3} rows={rows2} onCellChange={onCellChange} />);
+
+    const table = screen.getByRole("grid");
+    await user.click(table);
+    // Navigate to last column (col 2), enter edit mode, Tab
+    await user.keyboard("{ArrowRight}{ArrowRight}");
+    await user.keyboard("{Enter}");
+
+    const input = getTd(0, 2).querySelector("input") as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+
+    await user.keyboard("{Tab}");
+    // Should stay on row 0, col 2 (clamped)
+    expect(getTd(0, 2).tabIndex).toBe(0);
+  });
+
+  // 38. Disabled row cells have pointer-events: none and JS guard ignores clicks
+  it("disabled row has pointer-events: none via data-disabled attribute", () => {
+    const rows3: RowData[] = [
+      { id: "r1", a: "A1", b: "B1", c: "C1" },
+      { id: "r2", a: "A2", b: "B2", c: "C2" },
+    ];
+    render(
+      <DataTable
+        columns={cols3}
+        rows={rows3}
+        getRowDisabled={(row) => row.id === "r2"}
+      />
+    );
+    // The CSS rule [data-disabled="true"] { pointer-events: none } blocks all clicks
+    const trs = getTrs();
+    expect(trs[1]).toHaveAttribute("data-disabled", "true");
+  });
 });
