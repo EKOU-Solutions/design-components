@@ -12,6 +12,8 @@
   position: relative;
   height: 28px;
   vertical-align: middle;
+  cursor: default;
+  outline: none;
 }
 
 .cell[data-align="right"] {
@@ -22,8 +24,21 @@
   text-align: center;
 }
 
-.cell[data-selected="true"] {
+/* Navigation focus (yellow) — only when NOT in edit-row mode */
+.cell[data-focused="true"]:not([data-editing-row="true"]) {
   background: var(--table-selected-bg);
+}
+
+/* Entire row is in edit mode — light blue bg for non-editing cells */
+.cell[data-editing-row="true"]:not([data-editing="true"]) {
+  background: var(--table-row-edit-bg, #dbeafe);
+}
+
+/* Editing cell — allow overflow for dropdown, remove padding (editor handles it) */
+.cell[data-editing="true"] {
+  overflow: visible;
+  z-index: 5;
+  padding: 0;
 }
 
 .selectedIndicator {

@@ -1,18 +1,17 @@
 import React from "react";
 import styles from "./TotalsRow.module.css";
-import type { ColumnDef, TotalsData } from "../types";
+import type { ColumnDef } from "../types";
 
 interface TotalsRowProps {
   columns: ColumnDef[];
-  totals: TotalsData;
+  totals: Record<string, string>;
 }
 
 export function TotalsRow({ columns, totals }: TotalsRowProps) {
   return (
     <tr className={styles.row} role="row" aria-label="Totals">
       {columns.map((col) => {
-        const value = totals[col.key];
-        const displayValue = value == null ? "" : String(value);
+        const displayValue = totals[col.key] ?? "";
         return (
           <td
             key={col.key}

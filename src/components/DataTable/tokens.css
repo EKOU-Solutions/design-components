@@ -16,4 +16,5 @@
   --table-max-height: 400px;
   --column-dropdown-bg: #ffffff;
   --column-dropdown-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --table-row-edit-bg: #dbeafe;
 }

@@ -2,7 +2,12 @@
   background: var(--table-row-hover-bg);
 }
 
-/* Selected cell overrides hover */
-.row:hover .cell[data-selected="true"] {
+/* Edit mode row overrides hover */
+.row[data-editing="true"] .cell {
+  background: var(--table-row-edit-bg, #dbeafe);
+}
+
+/* Focused cell overrides hover when not in edit mode */
+.row:not([data-editing="true"]):hover .cell[data-focused="true"] {
   background: var(--table-selected-bg);
 }
