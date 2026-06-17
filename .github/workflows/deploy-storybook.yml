@@ -37,6 +37,9 @@ jobs:
         env:
           BASE_PATH: /design-components/
 
+      - name: Disable Jekyll
+        run: touch storybook-static/.nojekyll
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: storybook-static
