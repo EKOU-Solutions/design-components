@@ -1,34 +1,33 @@
-import { Meta, Canvas, Controls } from '@storybook/blocks';
+import { Meta, Canvas } from '@storybook/addon-docs/blocks';
 import * as DataTableStories from './DataTable.stories';
 
 <Meta of={DataTableStories} />
 
 # DataTable
 
-An Excel-like data grid built for accounting and tabular workflows. Supports keyboard navigation (ARIA grid pattern), inline cell editing, auto-computed totals, row creation, deletion, and disabled rows.
+An Excel-like data grid for accounting and tabular workflows. Supports keyboard navigation (ARIA grid pattern), inline cell editing, auto-computed totals, row creation/deletion, and disabled rows.
 
 ---
 
 ## Architecture
 
 ```
-DataTable (DataTable.tsx)
-├── Toolbar            — "+ Add row" button (shown when onAddRow is provided)
-├── scroll wrapper     — overflow: auto, bounded by height or fill-parent
-│   └── <table role="grid">
-│       ├── <thead>   — ColumnHeader × N + optional Actions th
-│       └── <tbody>   — DataRow × N
-│           └── Cell / CellEditor / SelectEditor per cell
-└── totals wrapper     — width: 100%, always full container width
-    └── <table>        — table-layout: fixed, TotalsRow
+DataTable
+├── Toolbar              — "+ Add row" button (shown when onAddRow is provided)
+├── scroll wrapper       — overflow: auto, bounded by height prop or fill-parent
+│   └── table[role=grid]
+│       ├── thead        — ColumnHeader × N  +  optional Actions th
+│       └── tbody        — DataRow × N  →  Cell | CellEditor | SelectEditor
+└── totals wrapper       — width: 100%, always fills the full container
+    └── table            — table-layout: fixed, TotalsRow
 ```
 
-**Key design decisions:**
+**Key decisions:**
 
-- **Data-down, events-up.** DataTable owns no data. All mutation is signalled via callbacks (`onCellChange`, `onAddRow`, `onDeleteRow`). The parent controls state.
-- **Two-table layout for totals.** The totals footer lives in a separate `<table>` outside the scroll container so it is always visible and always fills `100%` of the container width regardless of the main table's content width.
-- **ARIA grid pattern.** The `<table>` has `role="grid"` and `aria-activedescendant`. Cells are identified by `id="cell-{rowIndex}-{colIndex}"`. Keyboard navigation follows the [ARIA grid spec](https://www.w3.org/WAI/ARIA/apg/patterns/grid/).
-- **CSS custom properties for theming.** All visual tokens (`--table-bg`, `--table-border`, `--table-header-bg`, etc.) are defined in `tokens.css` and applied via CSS modules.
+- **Data-down, events-up.** DataTable owns no data. All mutations are signalled via callbacks (`onCellChange`, `onAddRow`, `onDeleteRow`). The parent controls state.
+- **Two-table layout for totals.** The totals footer lives outside the scroll container so it is always visible and always fills 100% of the container width.
+- **ARIA grid pattern.** The table has `role="grid"` and `aria-activedescendant`. Cells are identified by `id="cell-{rowIndex}-{colIndex}"`.
+- **CSS custom properties for theming.** All tokens are declared in `tokens.css` on `:root` and can be overridden on any ancestor element.
 
 ---
 
@@ -36,42 +35,31 @@ DataTable (DataTable.tsx)
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `columns` | `ColumnDef[]` | — | Column definitions (see below) |
-| `rows` | `RowData[]` | — | Row data. Each row must have a unique `id: string` |
+| `columns` | `ColumnDef[]` | — | Column definitions |
+| `rows` | `RowData[]` | — | Row data — each row needs a unique `id: string` |
 | `height` | `number \| "fill"` | — | Fixed max-height in px, or `"fill"` to stretch to parent |
-| `className` | `string` | — | Additional class on root element |
+| `className` | `string` | — | Extra class on root element |
 | `initialFocusedCell` | `{ rowIndex, colIndex }` | — | Pre-focus a cell without user interaction |
 | `onCellChange` | `(rowId, colKey, value) => void` | — | Called when a cell value is committed |
 | `onAddRow` | `() => void` | — | Shows the + toolbar button; called on click |
 | `deletable` | `boolean` | `false` | Adds a delete column with a trash icon per row |
 | `onDeleteRow` | `(rowId) => void` | — | Called when the trash icon is clicked |
-| `getRowDisabled` | `(row: RowData) => boolean` | — | Return `true` to make a row read-only and skip it during keyboard navigation |
+| `getRowDisabled` | `(row: RowData) => boolean` | — | Return `true` to make a row read-only |
 
 ### ColumnDef
 
-```ts
-interface ColumnDef {
-  key: string;          // unique column key, matches RowData property names
-  label: string;        // column header text
-  width?: number;       // px width (default: 100)
-  align?: 'left' | 'right' | 'center';
-  type?: 'string' | 'number' | 'select';  // controls editor and totals sum
-  options?: SelectOption[];  // required when type='select'
-  editable?: boolean;   // false disables edit mode for this column (default: true)
-  placeholder?: string; // shown in text editor when value is empty
-  showTotal?: boolean;  // include column in the totals footer row
-  totalLabel?: string;  // static label in totals cell (e.g. "TOTAL:"); if omitted, sums numbers
-}
-```
-
-### RowData
-
-```ts
-interface RowData {
-  id: string;           // must be unique — used as React key and in callbacks
-  [key: string]: unknown;
-}
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| `key` | `string` | Unique key — matches property names in `RowData` |
+| `label` | `string` | Header text |
+| `width` | `number` | Width in px (default: 100) |
+| `align` | `'left' \| 'right' \| 'center'` | Cell text alignment |
+| `type` | `'string' \| 'number' \| 'select'` | Controls editor and totals computation |
+| `options` | `SelectOption[]` | Required when `type='select'` |
+| `editable` | `boolean` | `false` disables edit mode for this column |
+| `placeholder` | `string` | Shown in text editor when value is empty |
+| `showTotal` | `boolean` | Include this column in the totals footer |
+| `totalLabel` | `string` | Static label in totals cell (e.g. `"TOTAL:"`); if omitted, sums numbers |
 
 ---
 
@@ -80,14 +68,14 @@ interface RowData {
 | Key | Action |
 |-----|--------|
 | Arrow keys | Move focused cell |
-| `Home` / `End` | Jump to first / last column in current row |
-| `Ctrl+Home` / `Ctrl+End` | Jump to first / last cell in the grid |
-| `Enter` / `F2` | Enter edit mode on focused cell |
-| `Escape` | Cancel edit, return to navigation mode |
-| `Tab` (in edit mode) | Commit value and move to next editable cell |
-| `Enter` (in delete column) | Trigger `onDeleteRow` for focused row |
+| `Home` / `End` | First / last column in current row |
+| `Ctrl+Home` / `Ctrl+End` | First / last cell in the grid |
+| `Enter` or `F2` | Enter edit mode |
+| `Escape` | Cancel edit, return to navigation |
+| `Tab` (in edit mode) | Commit and move to next column |
+| `Enter` on delete column | Trigger `onDeleteRow` |
 
-Disabled rows are skipped during `ArrowUp` / `ArrowDown` navigation and cannot enter edit mode.
+Disabled rows (via `getRowDisabled`) are skipped during arrow navigation and cannot enter edit mode.
 
 ---
 
@@ -95,64 +83,28 @@ Disabled rows are skipped during `ArrowUp` / `ArrowDown` navigation and cannot e
 
 Set `showTotal: true` on any column to display the totals row.
 
-- If `type: "number"` — the column value is summed. Commas are stripped before parsing (e.g. `"1,234.56"` → `1234.56`).
-- If `totalLabel` is set — that static string is shown (useful for labelling the row, e.g. `"TOTAL:"`).
-- Otherwise — the cell is empty.
+- `type: "number"` columns are summed. Commas are stripped before parsing — `"1,234.56"` becomes `1234.56`.
+- `totalLabel` shows a static string instead of a sum (useful for labelling the row).
+- All other columns show an empty cell.
 
-The totals table is a separate element outside the scroll area. It always fills `100%` of the DataTable container width.
+The totals table is a separate element outside the scroll area and always fills 100% of the DataTable container width.
 
 ---
 
 ## Cell Editors
 
-**Text / Number (`type: "string" | "number"`)** — renders an `<input>`. Commits on `Enter` or blur. Cancels on `Escape`.
+**Text / Number** (`type: "string"` or `type: "number"`) — renders an input. Commits on Enter or blur. Cancels on Escape.
 
-**Select (`type: "select"`)** — renders a custom ARIA listbox (`role="listbox"`, `role="option"`). `ArrowDown` / `ArrowUp` navigate options, `Enter` commits, `Escape` cancels. Arrow keys do not propagate to the table's scroll container.
-
----
-
-## Examples
-
-### Default (read-only navigation)
-
-<Canvas of={DataTableStories.Default} />
-
-### With pre-focused cell
-
-<Canvas of={DataTableStories.Selected} />
-
-### Inline editing (string, number, select)
-
-<Canvas of={DataTableStories.Editable} />
-
-### Add row
-
-<Canvas of={DataTableStories.WithAddRow} />
-
-### Delete rows
-
-<Canvas of={DataTableStories.WithDeleteRow} />
-
-### Full CRUD (add + delete + edit)
-
-<Canvas of={DataTableStories.WithAddAndDelete} />
-
-### Disabled rows
-
-<Canvas of={DataTableStories.WithDisabledRows} />
-
-### Fill parent container
-
-<Canvas of={DataTableStories.FillParent} />
+**Select** (`type: "select"`) — renders a custom ARIA listbox. ArrowDown/Up navigate options, Enter commits, Escape cancels. Arrow keys do not propagate to the table scroll container.
 
 ---
 
 ## Theming
 
-Override any CSS custom property on a parent element to theme the table:
+Override any CSS custom property on a parent element:
 
 ```css
-.my-section {
+.my-container {
   --table-bg: #1e1e1e;
   --table-border: #444;
   --table-header-bg: #2d2d2d;
@@ -164,4 +116,40 @@ Override any CSS custom property on a parent element to theme the table:
 }
 ```
 
-All tokens are declared in `tokens.css` on `:root`.
+All tokens are declared in `tokens.css`.
+
+---
+
+## Examples
+
+### Read-only (navigation only)
+
+<Canvas of={DataTableStories.Default} />
+
+### Pre-focused cell
+
+<Canvas of={DataTableStories.Selected} />
+
+### Inline editing
+
+<Canvas of={DataTableStories.Editable} />
+
+### Add row
+
+<Canvas of={DataTableStories.WithAddRow} />
+
+### Delete rows
+
+<Canvas of={DataTableStories.WithDeleteRow} />
+
+### Full CRUD
+
+<Canvas of={DataTableStories.WithAddAndDelete} />
+
+### Disabled rows
+
+<Canvas of={DataTableStories.WithDisabledRows} />
+
+### Fill parent container
+
+<Canvas of={DataTableStories.FillParent} />
