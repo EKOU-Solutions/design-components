@@ -10,6 +10,7 @@ interface CellProps {
   isFocused: boolean;
   isEditing: boolean;
   isEditingRow: boolean;
+  isDisabled?: boolean;
   column: ColumnDef;
   rowIndex: number;
   colIndex: number;
@@ -28,6 +29,7 @@ export function Cell({
   isFocused,
   isEditing,
   isEditingRow,
+  isDisabled,
   column,
   rowIndex,
   colIndex,
@@ -66,12 +68,13 @@ export function Cell({
       data-editing-row={isEditingRow ? "true" : undefined}
       title={isEditing ? undefined : displayValue}
       style={cellStyle}
-      tabIndex={isFocused ? 0 : -1}
+      tabIndex={isDisabled ? -1 : isFocused ? 0 : -1}
       role="gridcell"
       aria-rowindex={rowIndex + 2}
       aria-colindex={colIndex + 1}
-      onFocus={() => onCellFocus(rowIndex, colIndex)}
-      onClick={() => onCellClick(rowIndex, colIndex)}
+      data-disabled={isDisabled ? "true" : undefined}
+      onFocus={() => !isDisabled && onCellFocus(rowIndex, colIndex)}
+      onClick={() => !isDisabled && onCellClick(rowIndex, colIndex)}
     >
       {isEditing ? (
         <CellEditor

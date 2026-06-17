@@ -28,4 +28,8 @@ export interface DataTableProps {
   className?: string;
   initialFocusedCell?: { rowIndex: number; colIndex: number };
   onCellChange?: (rowId: string, colKey: string, value: string) => void;
+  onAddRow?: () => void;
+  deletable?: boolean;
+  onDeleteRow?: (rowId: string) => void;
+  getRowDisabled?: (row: RowData) => boolean;
 }

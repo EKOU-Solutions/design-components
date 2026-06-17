@@ -18,6 +18,10 @@ export function DataTable({
   className,
   initialFocusedCell,
   onCellChange,
+  onAddRow,
+  deletable,
+  onDeleteRow,
+  getRowDisabled,
 }: DataTableProps) {
   const [focusedCell, setFocusedCell] = useState<FocusedCell | null>(
     initialFocusedCell ?? null
@@ -39,9 +43,30 @@ export function DataTable({
   const scrollStyle: React.CSSProperties =
     typeof height === "number" ? { maxHeight: height } : {};
 
+  // maxCol includes delete column as virtual extra column index
+  const maxColData = columns.length - 1;
+  const maxCol = deletable ? columns.length : maxColData;
+
+  // --- Disabled row helper ---
+  function isRowDisabled(rowIndex: number): boolean {
+    return getRowDisabled != null ? getRowDisabled(rows[rowIndex]) : false;
+  }
+
+  function findNextEnabledRow(from: number, direction: 1 | -1): number {
+    let next = from + direction;
+    while (next >= 0 && next < rows.length) {
+      if (!getRowDisabled?.(rows[next])) return next;
+      next += direction;
+    }
+    return from;
+  }
+
   // --- Edit helpers ---
 
   function enterEditMode(rowIndex: number, colIndex: number) {
+    if (isRowDisabled(rowIndex)) return;
+    // delete column index — not editable
+    if (colIndex >= columns.length) return;
     const col = columns[colIndex];
     if (col.editable === false) return;
     const row = rows[rowIndex];
@@ -76,7 +101,7 @@ export function DataTable({
     if (!editingCell) return;
     commitEdit(value);
     const { rowIndex, colIndex } = editingCell;
-    const nextCol = Math.min(colIndex + 1, columns.length - 1);
+    const nextCol = Math.min(colIndex + 1, maxColData);
     setFocusedCell({ rowIndex, colIndex: nextCol });
     enterEditMode(rowIndex, nextCol);
   }
@@ -88,6 +113,8 @@ export function DataTable({
   // --- Cell interaction ---
 
   function handleCellClick(rowIndex: number, colIndex: number) {
+    if (isRowDisabled(rowIndex)) return;
+
     const isAlreadyFocused =
       focusedCell?.rowIndex === rowIndex && focusedCell?.colIndex === colIndex;
 
@@ -119,7 +146,9 @@ export function DataTable({
 
   function handleTableFocus(e: React.FocusEvent<HTMLTableElement>) {
     if (e.target === e.currentTarget && focusedCell === null) {
-      setFocusedCell({ rowIndex: 0, colIndex: 0 });
+      // Find first non-disabled row
+      const firstRow = rows.findIndex((r) => !getRowDisabled?.(r));
+      setFocusedCell({ rowIndex: firstRow >= 0 ? firstRow : 0, colIndex: 0 });
     }
   }
 
@@ -130,7 +159,6 @@ export function DataTable({
 
     const { rowIndex, colIndex } = focusedCell;
     const maxRow = rows.length - 1;
-    const maxCol = columns.length - 1;
 
     switch (e.key) {
       case "ArrowRight":
@@ -143,11 +171,11 @@ export function DataTable({
         break;
       case "ArrowDown":
         e.preventDefault();
-        setFocusedCell({ rowIndex: Math.min(rowIndex + 1, maxRow), colIndex });
+        setFocusedCell({ rowIndex: findNextEnabledRow(rowIndex, 1), colIndex });
         break;
       case "ArrowUp":
         e.preventDefault();
-        setFocusedCell({ rowIndex: Math.max(rowIndex - 1, 0), colIndex });
+        setFocusedCell({ rowIndex: findNextEnabledRow(rowIndex, -1), colIndex });
         break;
       case "Home":
         e.preventDefault();
@@ -168,7 +196,12 @@ export function DataTable({
       case "Enter":
       case "F2":
         e.preventDefault();
-        enterEditMode(rowIndex, colIndex);
+        if (deletable && colIndex === columns.length) {
+          // Enter on delete column triggers delete
+          onDeleteRow?.(rows[rowIndex].id);
+        } else {
+          enterEditMode(rowIndex, colIndex);
+        }
         break;
       default:
         break;
@@ -202,7 +235,7 @@ export function DataTable({
 
   return (
     <div className={rootClass} data-fill={isFill ? "true" : undefined}>
-      <Toolbar />
+      <Toolbar onAdd={onAddRow} />
 
       <div className={scrollClass} style={scrollStyle} data-scroll-wrapper="true">
         <table
@@ -210,7 +243,7 @@ export function DataTable({
           role="grid"
           aria-label="Data table"
           aria-rowcount={rows.length + 1}
-          aria-colcount={columns.length}
+          aria-colcount={columns.length + (deletable ? 1 : 0)}
           aria-activedescendant={activeCellId}
           tabIndex={focusedCell === null ? 0 : -1}
           onFocus={handleTableFocus}
@@ -221,14 +254,21 @@ export function DataTable({
               {columns.map((col) => (
                 <ColumnHeader key={col.key} column={col} />
               ))}
+              {deletable && (
+                <th scope="col" className={styles.deleteHeader} aria-label="Actions" />
+              )}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, rowIndex) => {
+              const disabled = getRowDisabled?.(row) ?? false;
               const isEditingRow = editingCell?.rowIndex === rowIndex;
               const focusedColIndex =
                 focusedCell?.rowIndex === rowIndex ? focusedCell.colIndex : null;
               const editingColIndex = isEditingRow ? editingCell.colIndex : null;
+              const isDeleteFocused =
+                focusedCell?.rowIndex === rowIndex &&
+                focusedCell?.colIndex === columns.length;
               return (
                 <DataRow
                   key={row.id}
@@ -244,6 +284,10 @@ export function DataTable({
                   onCancel={handleCancel}
                   onTabCommit={handleTabCommit}
                   onEditChange={handleEditChange}
+                  deletable={deletable}
+                  onDeleteRow={onDeleteRow}
+                  isDeleteFocused={isDeleteFocused}
+                  disabled={disabled}
                 />
               );
             })}
@@ -258,13 +302,22 @@ export function DataTable({
               {columns.map((col) => (
                 <col
                   key={col.key}
-                  style={col.width ? { width: col.width, minWidth: col.width } : undefined}
+                  style={{ width: col.width ?? 100, minWidth: col.width ?? 100 }}
                 />
               ))}
+              {deletable && (
+                <col style={{ width: 36, minWidth: 36, maxWidth: 36 }} />
+              )}
+              <col />
             </colgroup>
-            <tfoot>
-              <TotalsRow columns={columns} totals={computedTotals} />
-            </tfoot>
+            <tbody>
+              <TotalsRow
+                columns={columns}
+                totals={computedTotals}
+                deletable={deletable}
+                withFiller
+              />
+            </tbody>
           </table>
         </div>
       )}

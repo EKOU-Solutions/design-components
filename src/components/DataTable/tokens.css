@@ -14,7 +14,11 @@
   --table-toolbar-bg: #e8e8e8;
   --table-toolbar-height: 36px;
   --table-max-height: 400px;
+  --table-delete-col-width: 36px;
   --column-dropdown-bg: #ffffff;
   --column-dropdown-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   --table-row-edit-bg: #dbeafe;
+  --table-row-disabled-bg: #f3f4f6;
+  --table-row-disabled-color: #9ca3af;
+  --table-row-disabled-opacity: 0.7;
 }

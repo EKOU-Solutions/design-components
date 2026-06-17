@@ -5,9 +5,11 @@ import type { ColumnDef } from "../types";
 interface TotalsRowProps {
   columns: ColumnDef[];
   totals: Record<string, string>;
+  deletable?: boolean;
+  withFiller?: boolean;
 }
 
-export function TotalsRow({ columns, totals }: TotalsRowProps) {
+export function TotalsRow({ columns, totals, deletable, withFiller }: TotalsRowProps) {
   return (
     <tr className={styles.row} role="row" aria-label="Totals">
       {columns.map((col) => {
@@ -23,6 +25,8 @@ export function TotalsRow({ columns, totals }: TotalsRowProps) {
           </td>
         );
       })}
+      {deletable && <td className={styles.deleteCell} />}
+      {withFiller && <td className={styles.fillerCell} />}
     </tr>
   );
 }

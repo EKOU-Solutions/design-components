@@ -14,11 +14,9 @@
 }
 
 .scrollWrapper {
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto;
   max-height: var(--table-max-height);
   border: 1px solid var(--table-border);
-  border-bottom: none;
   position: relative;
   flex-shrink: 0;
 }
@@ -31,22 +29,36 @@
 
 .table {
   border-collapse: collapse;
-  min-width: max-content;
   width: 100%;
+  min-width: max-content;
   background: var(--table-bg);
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .totalsWrapper {
+  overflow: hidden;
   border: 1px solid var(--table-border);
   border-top: none;
-  overflow: hidden;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .totalsTable {
-  border-collapse: collapse;
-  min-width: max-content;
   width: 100%;
   table-layout: fixed;
+  border-collapse: collapse;
+  background: var(--table-totals-bg);
+}
+
+.deleteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--table-header-bg);
+  border: 1px solid var(--table-border);
+  height: var(--table-header-height);
+  width: var(--table-delete-col-width);
+  min-width: var(--table-delete-col-width);
+  max-width: var(--table-delete-col-width);
+  padding: 2px 6px;
 }

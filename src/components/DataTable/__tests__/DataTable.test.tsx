@@ -346,7 +346,7 @@ describe("DataTable", () => {
   });
 
   // 16. Totals row — auto-computed from column config
-  it("renders two tables when columns have showTotal", () => {
+  it("renders tfoot with totals when columns have showTotal", () => {
     const colsWithTotals: ColumnDef[] = [
       { key: "label", label: "Label", width: 80, showTotal: true, totalLabel: "TOT" },
       { key: "amount", label: "Amount", width: 100, type: "number", showTotal: true },
@@ -358,13 +358,15 @@ describe("DataTable", () => {
     ];
     render(<DataTable columns={colsWithTotals} rows={rowsWithNums} />);
     expect(document.querySelectorAll("table")).toHaveLength(2);
+    expect(document.querySelector("tfoot")).not.toBeInTheDocument();
     expect(screen.getByText("TOT")).toBeInTheDocument();
     expect(screen.getByText("300.00")).toBeInTheDocument();
   });
 
-  it("renders only one table when no columns have showTotal", () => {
+  it("renders no totals table when no columns have showTotal", () => {
     render(<DataTable columns={cols3} rows={rows2} />);
     expect(document.querySelectorAll("table")).toHaveLength(1);
+    expect(document.querySelector("tfoot")).not.toBeInTheDocument();
   });
 
   // 17. Totals auto-update when rows change
@@ -479,5 +481,190 @@ describe("DataTable", () => {
     await user.keyboard("{Enter}");
 
     expect(onCellChange).toHaveBeenCalledWith("r1", "status", "inactive");
+  });
+
+  // 23. onAddRow called when + button clicked
+  it("calls onAddRow when the Add Row toolbar button is clicked", async () => {
+    const onAddRow = vi.fn();
+    const user = userEvent.setup();
+    render(<DataTable columns={cols3} rows={rows2} onAddRow={onAddRow} />);
+
+    await user.click(screen.getByRole("button", { name: "Add row" }));
+    expect(onAddRow).toHaveBeenCalledTimes(1);
+  });
+
+  // 24. + button exists but clicking it without onAddRow does not throw
+  it("+ button click without onAddRow does not throw", async () => {
+    const user = userEvent.setup();
+    render(<DataTable columns={cols3} rows={rows2} />);
+
+    await expect(
+      user.click(screen.getByRole("button", { name: "Add row" }))
+    ).resolves.not.toThrow();
+  });
+
+  // 25. delete buttons render when deletable=true
+  it("renders a delete button per row when deletable is true", () => {
+    const onDeleteRow = vi.fn();
+    render(<DataTable columns={cols3} rows={rows2} deletable onDeleteRow={onDeleteRow} />);
+
+    const deleteButtons = screen.getAllByRole("button", { name: /Delete row/i });
+    expect(deleteButtons).toHaveLength(2);
+  });
+
+  // 26. delete buttons not rendered when deletable is not set
+  it("does not render delete buttons when deletable is not set", () => {
+    render(<DataTable columns={cols3} rows={rows2} />);
+
+    expect(screen.queryByRole("button", { name: /Delete row/i })).not.toBeInTheDocument();
+  });
+
+  // 27. onDeleteRow called with correct rowId
+  it("calls onDeleteRow with the correct row id", async () => {
+    const onDeleteRow = vi.fn();
+    const user = userEvent.setup();
+    render(<DataTable columns={cols3} rows={rows2} deletable onDeleteRow={onDeleteRow} />);
+
+    const deleteButtons = screen.getAllByRole("button", { name: /Delete row/i });
+    await user.click(deleteButtons[0]);
+
+    expect(onDeleteRow).toHaveBeenCalledWith("r1");
+    expect(onDeleteRow).toHaveBeenCalledTimes(1);
+  });
+
+  // 28. delete column adds a styled th to header (same look as data columns)
+  it("adds a header th for the delete column", () => {
+    render(<DataTable columns={cols3} rows={rows2} deletable />);
+    // header should have one extra th for the delete column
+    expect(document.querySelectorAll("thead th")).toHaveLength(cols3.length + 1);
+    const ths = document.querySelectorAll("thead th");
+    const lastTh = ths[ths.length - 1];
+    expect(lastTh).toHaveAttribute("aria-label", "Actions");
+  });
+
+  // 29. delete cell is keyboard reachable via ArrowRight
+  it("delete cell is reachable via ArrowRight navigation", async () => {
+    const onDeleteRow = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataTable columns={cols3} rows={[rows2[0]]} deletable onDeleteRow={onDeleteRow} />
+    );
+
+    const table = screen.getByRole("grid");
+    await user.click(table);
+    // Navigate to last data column (col index 2), then one more right → delete col (index 3)
+    await user.keyboard("{ArrowRight}{ArrowRight}{ArrowRight}");
+    const deleteTd = document.querySelector(`#cell-0-${cols3.length}`) as HTMLElement;
+    expect(deleteTd.tabIndex).toBe(0);
+  });
+
+  // 30. Enter on delete cell calls onDeleteRow
+  it("Enter on focused delete cell calls onDeleteRow", async () => {
+    const onDeleteRow = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataTable columns={cols3} rows={[rows2[0]]} deletable onDeleteRow={onDeleteRow} />
+    );
+
+    const table = screen.getByRole("grid");
+    await user.click(table);
+    // Go to delete column
+    await user.keyboard("{ArrowRight}{ArrowRight}{ArrowRight}");
+    await user.keyboard("{Enter}");
+
+    expect(onDeleteRow).toHaveBeenCalledWith("r1");
+  });
+
+  // 31. disabled rows are skipped by ArrowDown
+  it("ArrowDown skips disabled rows", async () => {
+    const user = userEvent.setup();
+    const rows3: RowData[] = [
+      { id: "r1", a: "A1", b: "B1", c: "C1" },
+      { id: "r2", a: "A2", b: "B2", c: "C2" },
+      { id: "r3", a: "A3", b: "B3", c: "C3" },
+    ];
+    render(
+      <DataTable
+        columns={cols3}
+        rows={rows3}
+        getRowDisabled={(row) => row.id === "r2"}
+      />
+    );
+
+    const table = screen.getByRole("grid");
+    await user.click(table); // focuses row 0
+    expect(getTd(0, 0).tabIndex).toBe(0);
+
+    await user.keyboard("{ArrowDown}");
+    // row 1 is disabled — should land on row 2
+    expect(getTd(2, 0).tabIndex).toBe(0);
+    expect(getTd(1, 0).tabIndex).toBe(-1);
+  });
+
+  // 32. disabled rows are skipped by ArrowUp
+  it("ArrowUp skips disabled rows", async () => {
+    const u = userEvent.setup();
+    const rows3: RowData[] = [
+      { id: "r1", a: "A1", b: "B1", c: "C1" },
+      { id: "r2", a: "A2", b: "B2", c: "C2" },
+      { id: "r3", a: "A3", b: "B3", c: "C3" },
+    ];
+    render(
+      <DataTable
+        columns={cols3}
+        rows={rows3}
+        getRowDisabled={(row) => row.id === "r2"}
+      />
+    );
+
+    const table = screen.getByRole("grid");
+    await u.click(table); // lands on row 0 col 0
+    // move down twice: row 0 → (skip row 1 disabled) → row 2
+    await u.keyboard("{ArrowDown}");
+    expect(getTd(2, 0).tabIndex).toBe(0);
+    // now move up: row 2 → (skip row 1 disabled) → row 0
+    await u.keyboard("{ArrowUp}");
+    expect(getTd(0, 0).tabIndex).toBe(0);
+  });
+
+  // 33. disabled row cannot enter edit mode
+  it("disabled row does not enter edit mode on Enter", async () => {
+    const user = userEvent.setup();
+    const rows3: RowData[] = [
+      { id: "r1", a: "A1", b: "B1", c: "C1" },
+      { id: "r2", a: "A2", b: "B2", c: "C2" },
+      { id: "r3", a: "A3", b: "B3", c: "C3" },
+    ];
+    render(
+      <DataTable
+        columns={cols3}
+        rows={rows3}
+        getRowDisabled={(row) => row.id === "r1"}
+        initialFocusedCell={{ rowIndex: 0, colIndex: 0 }}
+      />
+    );
+    // row 0 is disabled — focus starts at row 0 but Enter should do nothing
+    const table = screen.getByRole("grid");
+    await user.click(table);
+    await user.keyboard("{Enter}");
+    expect(document.querySelector("input")).not.toBeInTheDocument();
+  });
+
+  // 34. disabled row has data-disabled attribute
+  it("disabled row has data-disabled='true' on the tr", () => {
+    const rows3: RowData[] = [
+      { id: "r1", a: "A1", b: "B1", c: "C1" },
+      { id: "r2", a: "A2", b: "B2", c: "C2" },
+    ];
+    render(
+      <DataTable
+        columns={cols3}
+        rows={rows3}
+        getRowDisabled={(row) => row.id === "r1"}
+      />
+    );
+    const trs = getTrs();
+    expect(trs[0]).toHaveAttribute("data-disabled", "true");
+    expect(trs[1]).not.toHaveAttribute("data-disabled", "true");
   });
 });

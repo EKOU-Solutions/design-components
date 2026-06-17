@@ -53,7 +53,11 @@ function ChevronDownIcon() {
   );
 }
 
-export function Toolbar() {
+interface ToolbarProps {
+  onAdd?: () => void;
+}
+
+export function Toolbar({ onAdd }: ToolbarProps) {
   return (
     <div role="toolbar" aria-label="Table actions" className={styles.toolbar}>
       <button className={styles.iconButton} aria-label="Zoom">
@@ -73,7 +77,7 @@ export function Toolbar() {
         </button>
       </div>
 
-      <button className={styles.iconButton} aria-label="Add row">
+      <button className={styles.iconButton} aria-label="Add row" onClick={onAdd}>
         <AddIcon />
       </button>
 

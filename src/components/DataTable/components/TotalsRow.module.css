@@ -25,3 +25,20 @@
 .cell[data-align="center"] {
   text-align: center;
 }
+
+.deleteCell {
+  width: var(--table-delete-col-width);
+  min-width: var(--table-delete-col-width);
+  max-width: var(--table-delete-col-width);
+  padding: 2px 6px;
+  border: 1px solid var(--table-border);
+  background: var(--table-totals-bg);
+  height: 28px;
+  vertical-align: middle;
+}
+
+.fillerCell {
+  border: 1px solid var(--table-border);
+  background: var(--table-totals-bg);
+  height: 28px;
+}

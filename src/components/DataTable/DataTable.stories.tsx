@@ -162,3 +162,126 @@ export const Editable: Story = {
     height: 350,
   },
 };
+
+/**
+ * Click the + button in the toolbar to append a new empty row.
+ * The parent owns the data — onAddRow is a signal to create and prepend/append a row.
+ */
+export const WithAddRow: Story = {
+  render: (args) => {
+    const [rows, setRows] = useState<RowData[]>(initialEditableRows);
+    function handleAddRow() {
+      const newRow: RowData = {
+        id: `row-${Date.now()}`,
+        ...Object.fromEntries(editableColumns.map((c) => [c.key, ""])),
+      };
+      setRows((prev) => [...prev, newRow]);
+    }
+    function handleCellChange(rowId: string, colKey: string, value: string) {
+      setRows((prev) =>
+        prev.map((r) => (r.id === rowId ? { ...r, [colKey]: value } : r))
+      );
+    }
+    return (
+      <DataTable
+        {...args}
+        rows={rows}
+        onAddRow={handleAddRow}
+        onCellChange={handleCellChange}
+      />
+    );
+  },
+  args: {
+    columns: editableColumns,
+    rows: initialEditableRows,
+    height: 350,
+  },
+};
+
+/**
+ * Each row has a red trash icon. The parent is responsible for removing the row
+ * from its data source when onDeleteRow fires with the row's id.
+ */
+export const WithDeleteRow: Story = {
+  render: (args) => {
+    const [rows, setRows] = useState<RowData[]>(initialEditableRows);
+    function handleDeleteRow(rowId: string) {
+      setRows((prev) => prev.filter((r) => r.id !== rowId));
+    }
+    function handleCellChange(rowId: string, colKey: string, value: string) {
+      setRows((prev) =>
+        prev.map((r) => (r.id === rowId ? { ...r, [colKey]: value } : r))
+      );
+    }
+    return (
+      <DataTable
+        {...args}
+        rows={rows}
+        deletable
+        onDeleteRow={handleDeleteRow}
+        onCellChange={handleCellChange}
+      />
+    );
+  },
+  args: {
+    columns: editableColumns,
+    rows: initialEditableRows,
+    height: 350,
+  },
+};
+
+/**
+ * Full CRUD: + button to add rows, trash icon to delete rows, inline cell editing.
+ * The parent manages all data — DataTable only emits events.
+ */
+export const WithAddAndDelete: Story = {
+  render: (args) => {
+    const [rows, setRows] = useState<RowData[]>(initialEditableRows);
+    function handleAddRow() {
+      setRows((prev) => [
+        ...prev,
+        { id: `row-${Date.now()}`, ...Object.fromEntries(editableColumns.map((c) => [c.key, ""])) },
+      ]);
+    }
+    function handleDeleteRow(rowId: string) {
+      setRows((prev) => prev.filter((r) => r.id !== rowId));
+    }
+    function handleCellChange(rowId: string, colKey: string, value: string) {
+      setRows((prev) =>
+        prev.map((r) => (r.id === rowId ? { ...r, [colKey]: value } : r))
+      );
+    }
+    return (
+      <DataTable
+        {...args}
+        rows={rows}
+        onAddRow={handleAddRow}
+        deletable
+        onDeleteRow={handleDeleteRow}
+        onCellChange={handleCellChange}
+      />
+    );
+  },
+  args: {
+    columns: editableColumns,
+    rows: initialEditableRows,
+    height: 350,
+  },
+};
+
+/**
+ * Rows marked as disabled are shown in a muted gray, are not keyboard-navigable,
+ * and cannot enter edit mode. Pass getRowDisabled to control which rows are disabled.
+ */
+export const WithDisabledRows: Story = {
+  args: {
+    columns: accountingColumns,
+    rows: [
+      { id: "row-1", pettyCash: "", debit: "", credit: "50,000.00", memo: "2nd paymen...", po: "", check: "501", customer: "MARQUEE S...", project: "99 - COR...", account: "14001 - ...", subAccount: "", vendor: "" },
+      { id: "row-2", pettyCash: "", debit: "50,000.00", credit: "", memo: "", po: "", check: "", customer: "", project: "99 - COR...", account: "11001 - ...", subAccount: "", vendor: "" },
+      { id: "row-3", pettyCash: "", debit: "10,000.00", credit: "", memo: "Third entry", po: "", check: "502", customer: "ACME Corp", project: "88 - PROJ...", account: "12001 - ...", subAccount: "", vendor: "" },
+    ],
+    getRowDisabled: (row: RowData) => row.id === "row-2",
+    height: 300,
+  },
+};
